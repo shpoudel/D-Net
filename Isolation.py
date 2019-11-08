@@ -34,8 +34,6 @@ class OpenSw(object):
         # For isolation take a meshed network
         for l in self.LineSW:
             G.add_edge(l['from_br'], l['to_br'])
-        
-        print("\n Number of Nodes:", G.number_of_nodes(), "\n", "Number of Edges:", G.number_of_edges())
 
         Source = 'SOURCEBUS'
         Fault = self.fault 
