@@ -6,8 +6,6 @@ import numpy as np
 import networkx as nx 
 from Radial9500 import Power_Flow
 from Optimization import Restoration
-from Location import FaultLocation
-
 
 class Data:
     """
@@ -118,10 +116,10 @@ if __name__ == '__main__':
     d2 = Power_Flow(f2,f3, r"C:\Users\Auser\Desktop\Shiva\PyParse\IEEE9500\Master-bal-new.dss")
     Linepar, T, G, Nodes = d2.Solve(f2, f3)
    
-    # fault = ['M1142875', 'M1125902', 'M1209811']
-    # # fault = ['M1047300']
-    # opt = Restoration()    
-    # opt.res9500(Linepar, LoadData, fault)
+    fault = ['M1142875', 'M1125902', 'M1209811']
+    # fault = ['M1047300']
+    opt = Restoration()    
+    opt.res9500(Linepar, LoadData, fault)
 
     
 
