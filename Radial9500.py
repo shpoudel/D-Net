@@ -208,6 +208,29 @@ class Power_Flow:
                 line['r'] = [0.001, 0.0, 0.0, 0.0, 0.001, 0.0, 0.0, 0.0, 0.001]
                 line['x'] = [0.001, 0.0, 0.0, 0.0, 0.001, 0.0, 0.0, 0.0, 0.001]
 
+        # Add few more lines for DG virtual switch
+        message = dict(line = 'dgv1',
+                            index = 2754,
+                            from_br = 'SOURCEBUS',
+                            to_br = 'M1209DER480-1',
+                            is_Switch = 1,
+                            length = 0.001,
+                            nPhase = 3,
+                            Phase = 'ABC',
+                            r = [0.001, 0.0, 0.0, 0.0, 0.001, 0.0, 0.0, 0.0, 0.001],
+                            x = [0.001, 0.0, 0.0, 0.0, 0.001, 0.0, 0.0, 0.0, 0.001])
+        Linepar.append(message)
+        message = dict(line = 'dgv2',
+                            index = 2755,
+                            from_br = 'SOURCEBUS',
+                            to_br = 'M1142DER480-1',
+                            is_Switch = 1,
+                            length = 0.001,
+                            nPhase = 3,
+                            Phase = 'ABC',
+                            r = [0.001, 0.0, 0.0, 0.0, 0.001, 0.0, 0.0, 0.0, 0.001],
+                            x = [0.001, 0.0, 0.0, 0.0, 0.001, 0.0, 0.0, 0.0, 0.001])
+        Linepar.append(message)
         return  Linepar, Tree, self.G, Nodes    
      
    

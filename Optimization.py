@@ -27,7 +27,7 @@ class Restoration:
         
         # Note: If required, this nor_open list can be obtained from Platform
         nor_open = ['ln0653457_sw','v7173_48332_sw', 'tsw803273_sw', 'a333_48332_sw','tsw320328_sw',\
-                   'a8645_48332_sw','tsw568613_sw', 'wf856_48332_sw', 'wg127_48332_sw']  
+                   'a8645_48332_sw','tsw568613_sw', 'wf856_48332_sw', 'wg127_48332_sw', 'dgv1', 'dgv2']  
         for l in Linepar:
             if l['line'] not in nor_open:
                 G.add_edge(l['from_br'], l['to_br'])
@@ -43,6 +43,7 @@ class Restoration:
         # parameters
         nNodes = G.number_of_nodes()
         nEdges = G.number_of_edges() 
+        print(nNodes, nEdges)
         fr, to = zip(*T)
         fr = list(fr)
         to = list(to) 
@@ -65,8 +66,10 @@ class Restoration:
         # Optimization problem objective definitions
         # Maximize the power flow from feeder 
         prob = LpProblem("Resilient Restoration",LpMinimize)
-        No = [2745, 2746, 2747, 2748, 2749, 2750, 2751, 2752, 2753]
-        prob += -(Pija[0] + Pijb[0] + Pijc[0]) - lpSum(xij[i] for i in range(nEdges-9)) + 5 * lpSum(xij[No[k]] for k in range(9))
+        No = [2745, 2746, 2747, 2748, 2749, 2750, 2751, 2752, 2753, 2754, 2755]
+        # prob += -(Pija[0] + Pijb[0] + Pijc[0]) + 5 * lpSum(xij[No[k]] for k in range(11))
+        mult = -10000
+        prob += lpSum(si[k] * mult for k in range(nNodes)) - lpSum(xij[i] for i in range(nEdges - 11)) + 5 * lpSum(xij[No[k]] for k in range(11))
 
         # Constraints (v_i<=1)
         for k in range(nNodes):
@@ -144,20 +147,22 @@ class Restoration:
                     lpSum(Qijc[ch[j]] for j in M)
 
         # Big-M method for real power flow and switch variable
-        for k in range(nEdges):    
-            prob += Pija[k] <= bigM * xij[k]
-            prob += Pijb[k] <= bigM * xij[k]
-            prob += Pijc[k] <= bigM * xij[k] 
-            prob += Qija[k] <= bigM * xij[k]
-            prob += Qijb[k] <= bigM * xij[k]
-            prob += Qijc[k] <= bigM * xij[k] 
-            # For reverse flow
-            prob += Pija[k] >= -bigM * xij[k]
-            prob += Pijb[k] >= -bigM * xij[k] 
-            prob += Pijc[k] >= -bigM * xij[k] 
-            prob += Qija[k] >= -bigM * xij[k]
-            prob += Qijb[k] >= -bigM * xij[k] 
-            prob += Qijc[k] >= -bigM * xij[k] 
+        for l in Linepar:    
+            if l['is_Switch'] == 1:
+                k = l["index"]
+                prob += Pija[k] <= bigM * xij[k]
+                prob += Pijb[k] <= bigM * xij[k]
+                prob += Pijc[k] <= bigM * xij[k] 
+                prob += Qija[k] <= bigM * xij[k]
+                prob += Qijb[k] <= bigM * xij[k]
+                prob += Qijc[k] <= bigM * xij[k] 
+                # For reverse flow
+                prob += Pija[k] >= -bigM * xij[k]
+                prob += Pijb[k] >= -bigM * xij[k] 
+                prob += Pijc[k] >= -bigM * xij[k] 
+                prob += Qija[k] >= -bigM * xij[k]
+                prob += Qijb[k] >= -bigM * xij[k] 
+                prob += Qijc[k] >= -bigM * xij[k] 
 
         # Voltage constraints by coupling with switch variable
         base_Z = 7.2**2
@@ -279,11 +284,16 @@ class Restoration:
         prob += Vib[0] == 1.1025
         prob += Vic[0] == 1.1025
 
-        # Insert Fault        
-        pr = OpenSw(fault, Linepar)
-        op = pr.fault_isolation()
-        for k in range(len(op)):
-            prob += xij[op[k]] == 0
+        # Insert Fault  
+        nFault = len(fault)
+        opsw = []
+        for k in range(nFault):
+            pr = OpenSw(fault[k], Linepar)
+            op = pr.fault_isolation()
+            opsw.append(op)
+        opsw = [item for sublist in opsw for item in sublist]
+        for k in range(len(opsw)):
+            prob += xij[opsw[k]] == 0
         
         # Cyclic constraints
         fault = []
@@ -300,7 +310,13 @@ class Restoration:
             prob += Pija[s] >= 0
             prob += Pijb[s] >= 0
             prob += Pijc[s] >= 0
+            prob += Pija[s] <= 3000
+            prob += Pijb[s] <= 3000
+            prob += Pijc[s] <= 3000
 
+        # Single phase switch cannot carry three phase power
+        prob += Pijb[2751] == 0
+        prob += Pijc[2751] == 0
         # Transformers KVA ratings. Three main transformers for three substation are at:
         # The transformers are located at index 6, 30, and 37 and their rating is: 
         Xfm = [6, 30, 37]
@@ -321,6 +337,11 @@ class Restoration:
         print(' Substation #1:', Pija[4].varValue, Pijb[4].varValue, Pijc[4].varValue )
         print(' Substation #2:', Pija[27].varValue, Pijb[27].varValue, Pijc[27].varValue )
         print(' Substation #3:', Pija[34].varValue, Pijb[34].varValue, Pijc[34].varValue )
+        print(' DG #1:', Pija[2754].varValue, Pijb[2754].varValue, Pijc[2754].varValue )
+        print(' Dg #2:', Pija[2755].varValue, Pijb[2755].varValue, Pijc[2755].varValue )
+        print('Hospital:',Pija[407].varValue, Pijb[407].varValue, Pijc[407].varValue )
+        print('Voltage Hospital:', Via[408].varValue, Vib[408].varValue, Vic[408].varValue)
+        print('DG #1 Voltage:', Via[438].varValue, Vib[438].varValue, Vic[438].varValue)
         print ('..........')
         print(' Tie Switch Status:')        
         for k in range(len(No)):

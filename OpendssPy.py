@@ -7,7 +7,6 @@ import networkx as nx
 from Radial9500 import Power_Flow
 from Optimization import Restoration
 
-
 class Data:
     """
     This code is for extracting the data from OpenDSS (Line parameters, Load, Graph, Xfrms). 
@@ -102,6 +101,7 @@ def TransferLoad(Xfmr, LoadData):
         json.dump(LoadData, fp)
 
 if __name__ == '__main__':
+    # bal for balanced load from OpenDSS
     f1 = open("Test9500new_Elementsbal.txt","r")
     f2 = open("Test9500new_Elements_Radial.txt","r")
     f3 = open("Test9500new_Elements_Radial.txt","r")
@@ -115,10 +115,12 @@ if __name__ == '__main__':
     # This class forms a graph and collects lineparameters for the edges within the Graph only.    
     d2 = Power_Flow(f2,f3, r"C:\Users\Auser\Desktop\Shiva\PyParse\IEEE9500\Master-bal-new.dss")
     Linepar, T, G, Nodes = d2.Solve(f2, f3)
-    fault = ['M1125902']
-    # fault = []
+   
+    fault = ['M1142875', 'M1125902', 'M1209811']
+    # fault = ['M1047300']
     opt = Restoration()    
     opt.res9500(Linepar, LoadData, fault)
+
     
 
 
