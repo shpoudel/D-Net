@@ -1,6 +1,6 @@
 # D-Net
 
-Network data structure of distribution feeders from OpenDSS Asmita Acharya 
+Network data structure of distribution feeders from OpenDSS Asmitaaa
 
 ## Requirements
 
